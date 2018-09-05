@@ -1,0 +1,3 @@
+[submodule "sdl2pp"]
+	path = sdl2pp
+	url = git@github.com:arucil/sdl2pp.git
