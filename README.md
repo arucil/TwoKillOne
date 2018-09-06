@@ -17,3 +17,9 @@ Debug:
 Release:
 ```shell
 ```
+
+# Run
+
+```shell
+emrun TwoKillOne.html
+```
