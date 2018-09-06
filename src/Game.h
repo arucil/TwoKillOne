@@ -9,14 +9,15 @@
 #endif
 
 #include "sdl2pp.h"
+#include "Board.h"
 
 using namespace sdl2pp;
 
 
 class Game {
 public:
-    static const int WINDOW_WIDTH = 480;
-    static const int WINDOW_HEIGHT = 480;
+    static const int WINDOW_WIDTH = 306;
+    static const int WINDOW_HEIGHT = 306;
 
 public:
     Game();
@@ -57,6 +58,25 @@ private:
     void render();
 
 private:
+    /////////////////////////       game functions
+
+    void newGame();
+
+    void takeTurn();
+
+private:
+    enum class PlayerType {
+        Human, AI
+    };
+
+    enum class PlayerStatus {
+        None,
+        CanMove, // human player can move chessman
+        IsMoving, // human player is moving chessman
+        MoveAnimation, // playing chessman move animation
+    };
+
+private:
     EventDispatcher eventDispatcher;
     Window window;
     Renderer renderer;
@@ -64,6 +84,13 @@ private:
     Texture whiteChessmanTexture;
     Texture blackChessmanTexture;
     Texture boardTexture;
+
+    Board board;
+    PlayerType black;
+    PlayerType white;
+
+    Player curPlayer;
+    PlayerStatus playerStatus;
 };
 
 

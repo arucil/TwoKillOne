@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 file(GLOB sdl2pp_files "sdl2pp/src/*.cpp")
 
-add_executable(TwoKillOne ${sdl2pp_files} src/main.cpp src/Game.cpp src/Game.h)
+add_executable(TwoKillOne ${sdl2pp_files} src/main.cpp src/Game.cpp src/Game.h src/Board.cpp src/Board.h src/events.h)
 
 include_directories(${CMAKE_SOURCE_DIR}/sdl2pp/include)
 add_definitions(-DSDL2PP_USE_IMAGE)
