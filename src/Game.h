@@ -4,7 +4,6 @@
 
 #ifdef EMSCRIPTEN
 #include <emscripten.h>
-#include <EventDispatcher.h>
 
 #endif
 
@@ -29,13 +28,16 @@ public:
     void runOnce() {
         update();
         handleEvents();
-        render();
+        if (isDirty) {
+            render();
+            isDirty = false;
+        }
     }
 
     /**
      * @return true if succeed, false if the event was filtered, throw an sdl::Error if there was some other error
      */
-    bool fireUserEvent(int code, int data);
+    static bool fireUserEvent(int code, int data);
 
 private:
     void initEvents();
@@ -64,6 +66,10 @@ private:
 
     void takeTurn();
 
+    void move(); // move the chessman at playerOrgPos to playerCurPos
+
+    bool checkOver();
+
 private:
     enum class PlayerType {
         Human, AI
@@ -76,6 +82,33 @@ private:
         MoveAnimation, // playing chessman move animation
     };
 
+    struct Coord {
+        int x, y;
+    };
+
+    // If the coordinate is not in the area of any board grids, return nullopt
+    static optional<Board::Position> getBoardPos(int coordX, int coordY);
+
+    static const int CHESSMAN_OFFSET_X = 15;
+    static const int CHESSMAN_OFFSET_Y = 15;
+    static const int GRID_OFFSET_X = 12;
+    static const int GRID_OFFSET_Y = 12;
+    static const int GRID_W = 71;
+    static const int GRID_H = 71;
+    static const int CHESSMAN_W = 70;
+    static const int CHESSMAN_H = 70;
+    static const int GRID_INNER_W = 69;
+    static const int GRID_INNER_H = 69;
+    static const int CHESSMAN_ACTUAL_W = 60; // not including the shadow
+    static const int CHESSMAN_ACTUAL_H = 60;
+
+    static const int MOVE_ANIMATION_DURATION = 300; // ms
+
+#ifndef EMSCRIPTEN
+public:
+    bool quit;
+#endif
+
 private:
     EventDispatcher eventDispatcher;
     Window window;
@@ -85,12 +118,25 @@ private:
     Texture blackChessmanTexture;
     Texture boardTexture;
 
+    bool isDirty; // if need rendering
+
     Board board;
     PlayerType black;
     PlayerType white;
 
     Player curPlayer;
     PlayerStatus playerStatus;
+
+    // The following 3 fields are used for tracking the moving chessman
+    Board::Position playerOrgPos; // the original board position of the moving chessman
+    Board::Position playerCurPos; // the current board position of the moving chessman, if not available, the x component is -1
+    Point playerCurCoord; // the canvas coordinate of the moving chessman
+
+    double moveAnimationDelta; // 0 start, 1 end
+    double moveAnimationTime; // emscripten_get_now()
+
+    bool isMouse;
+    SDL_FingerID fingerId;
 };
 
 

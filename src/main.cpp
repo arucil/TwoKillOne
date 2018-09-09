@@ -2,24 +2,29 @@
 #include <emscripten.h>
 #endif
 
-#include <sstream>
 #include "sdl2pp.h"
 #include "Game.h"
 
 using namespace sdl2pp;
 
 
+#ifdef EMSCRIPTEN
 EMSCRIPTEN_KEEPALIVE
-extern "C" void fireUserEvent(Game *game, int code, int data) {
-    game->fireUserEvent(code, data);
+extern "C" void fireUserEvent(int code, int data) {
+    Game::fireUserEvent(code, data);
 }
+#endif
 
 void mainLoop(Game *game) {
     try {
         game->runOnce();
     } catch (const Exception &e) {
         SDL_Log("%s\n", e.what());
+#ifdef EMSCRIPTEN
         emscripten_cancel_main_loop();
+#else
+        game->quit = true;
+#endif
     }
 }
 
@@ -36,6 +41,10 @@ extern "C" int main() {
         emscripten_set_main_loop_arg(reinterpret_cast<void (*)(void *)>(mainLoop), game, -1, 1);
 #else
         // native application
+        while (!game->quit) {
+            game->runOnce();
+            SDL_Delay(20);
+        }
 
         delete game;
 #endif

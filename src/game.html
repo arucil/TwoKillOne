@@ -12,7 +12,7 @@
 
         #top-bar {
             margin-top: 3vh;
-            margin-bottom: 3vh;
+            margin-bottom: 2vh;
             text-align: center;
         }
 
@@ -40,6 +40,7 @@
             margin: 0;
             padding: 0;
             position: relative;
+            font-size: 1.1em;
         }
 
         #loading {
@@ -56,6 +57,13 @@
             left: 0;
             right: 0;
             margin: 0 auto;
+        }
+
+        #statusBar {
+            padding-top: 1vw;
+            padding-bottom: 1vw;
+            font-size: 1.3em;
+            height: calc(1.3em + 2vw);
         }
 
         .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
@@ -92,6 +100,7 @@
             <option>电脑</option>
         </select>
     </div>
+    <div class="emscripten" id="statusBar"></div>
     <div id="container">
         <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
         <div id="loading">
@@ -151,7 +160,7 @@
                     progressElement.max = null
                     progressElement.hidden = true
                     if (!text) {
-                        spinnerElement.hidden = true
+                        document.getElementById('loading').style.display = 'none'
                         document.getElementById('start').disabled = false
                         blackPlayerChange()
                         whitePlayerChange()
@@ -163,51 +172,63 @@
             monitorRunDependencies: function(left) {
                 this.totalDependencies = Math.max(this.totalDependencies, left)
                 Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.')
-            }
+            },
+
         };
         Module.setStatus('Downloading...')
-        window.onerror = function() {
+        window.onerror = function(e) {
             Module.setStatus('Exception thrown, see JavaScript console')
+            document.getElementById('loading').style.display = 'block'
             spinnerElement.style.display = 'none'
             Module.setStatus = function(text) {
                 if (text)
                     Module.printErr('[post-exception status] ' + text)
             }
+
+            if (e === 'preventClosureCompilerFromRemovingTheseFunctions') {
+                receiveEvent(0)
+                showMessage('')
+            }
         }
 
-        const UserEvent = {
+        const PageEvent = {
             StartGame: 1,
             SetBlack: 2,
             SetWhite: 3
         }
 
         function fireEvent(type, data) {
-            Module.ccall('fireUserEvent', 'void', ['number', 'number', 'number'], [Browser.mainLoop.arg, type, data])
+            Module.ccall('fireUserEvent', 'void', ['number', 'number'], [type, data])
         }
 
         function clickStart() {
-            fireEvent(UserEvent.StartGame, 0)
-            document.getElementById('start').disable = true
+            fireEvent(PageEvent.StartGame, 0)
+            document.getElementById('start').disabled = true
         }
 
         function blackPlayerChange() {
-            fireEvent(UserEvent.SetBlack, document.getElementById('blackPlayer').selectedIndex)
+            fireEvent(PageEvent.SetBlack, document.getElementById('blackPlayer').selectedIndex)
         }
 
         function whitePlayerChange() {
-            fireEvent(UserEvent.SetWhite, document.getElementById('whitePlayer').selectedIndex)
+            fireEvent(PageEvent.SetWhite, document.getElementById('whitePlayer').selectedIndex)
         }
 
-        const Msg = {
+        const GameEvent = {
             GameOver: 1
         }
 
-        function receiveMsg(msg) {
-            switch (msg) {
-            case Msg.GameOver:
-                document.getElementById('start').disable = false
+        function receiveEvent(e) {
+            switch (e) {
+            case GameEvent.GameOver:
+                document.getElementById('start').disabled = false
+                showMessage('')
                 break
             }
+        }
+
+        function showMessage(msg) {
+            document.getElementById('statusBar').innerText = msg
         }
 
     </script>
