@@ -29,7 +29,7 @@ if (EMSCRIPTEN)
             -s WASM=1 -s USE_SDL=2\
             -s USE_SDL_IMAGE=2 -s SDL2_IMAGE_FORMATS='[\"png\"]'\
             -s DISABLE_EXCEPTION_CATCHING=0\
-            --preload-file ../assets\
+            --preload-file assets\
             -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\"]'\
             --shell-file ${CMAKE_SOURCE_DIR}/src/game.html")
 
