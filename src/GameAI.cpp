@@ -48,7 +48,7 @@ void GameAI::think(const Board &board, Player player, int milliseconds) {
 
         // Expansion
         // Only do expansion when the selected node is not a terminal node
-        if (!promisingNode->board.isWinning(promisingNode->player)) {
+        if (promisingNode->visits != 0 && !promisingNode->board.isWinning(promisingNode->player)) {
             expandNode(promisingNode);
 
             // Select a random child node to explore
