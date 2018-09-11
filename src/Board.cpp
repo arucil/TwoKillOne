@@ -1,12 +1,13 @@
 #include "Board.h"
+#include <stdio.h>
 
 
 const Board::Delta Board::Directions[] = { { 0, -1 }, { 0, 1 }, { -1, 0 }, { 1, 0 } };
 
 Board::Board() {
-    for (int y = 0; y < SIZE; ++y) {
-        for (int x = 0; x < SIZE; ++x) {
-            array[y][x] = Player::None;
+    for (auto &y : array) {
+        for (auto &x : y) {
+            x = Player::None;
         }
     }
 }
@@ -65,11 +66,11 @@ bool Board::isWinning(Player player) const {
     for (int y = 0; y < SIZE; ++y) {
         for (int x = 0; x < SIZE; ++x) {
             if (array[y][x] == opponent) {
+                ++num;
                 for (auto &d : Directions) {
                     int x1 = x + d.x;
                     int y1 = y + d.y;
                     if (x1 >= 0 && x1 < SIZE && y1 >= 0 && y1 < SIZE && array[y1][x1] == Player::None) {
-                        ++num;
                         canMove = true;
                         break;
                     }

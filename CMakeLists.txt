@@ -5,7 +5,8 @@ set(CMAKE_CXX_STANDARD 17)
 
 file(GLOB sdl2pp_files "sdl2pp/src/*.cpp")
 
-add_executable(TwoKillOne ${sdl2pp_files} src/main.cpp src/Game.cpp src/Game.h src/Board.cpp src/Board.h src/events.h)
+add_executable(TwoKillOne ${sdl2pp_files} src/main.cpp src/Game.cpp src/Game.h src/Board.cpp src/Board.h src/events.h
+        src/GameAI.cpp src/GameAI.h src/AI_worker.cpp src/AI_worker.h)
 
 include_directories(${CMAKE_SOURCE_DIR}/sdl2pp/include)
 add_definitions(-DSDL2PP_USE_IMAGE)
@@ -33,6 +34,26 @@ if (EMSCRIPTEN)
             --shell-file ${CMAKE_SOURCE_DIR}/src/game.html")
 
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
+
+    # target worker.js
+    if (CMAKE_BUILD_TYPE STREQUAL "Release")
+        set(optimize_worker "-O3")
+    else()
+        set(optimize_worker)
+    endif()
+    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/worker.js
+            DEPENDS
+                ${CMAKE_SOURCE_DIR}/src/AI_worker.cpp ${CMAKE_SOURCE_DIR}/src/AI_worker.h
+                ${CMAKE_SOURCE_DIR}/src/GameAI.cpp ${CMAKE_SOURCE_DIR}/src/GameAI.h
+                ${CMAKE_SOURCE_DIR}/src/Board.cpp ${CMAKE_SOURCE_DIR}/src/Board.h
+            COMMAND ${CMAKE_CXX_COMPILER}
+                ${CMAKE_SOURCE_DIR}/src/AI_worker.cpp
+                ${CMAKE_SOURCE_DIR}/src/GameAI.cpp
+                ${CMAKE_SOURCE_DIR}/src/Board.cpp
+                -std=c++17 -s WASM=1 -s BUILD_AS_WORKER=1 -s EXPORTED_FUNCTIONS='["_runAI"]' -s ALLOW_MEMORY_GROWTH=1 -o worker.js ${optimize_worker})
+    add_custom_target(worker DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/worker.js)
+
+    add_dependencies(TwoKillOne worker)
 
 else()
     # Native build doesn't work properly, because the Game object needs to interact with the HTML page.

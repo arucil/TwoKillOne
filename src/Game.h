@@ -4,7 +4,6 @@
 
 #ifdef EMSCRIPTEN
 #include <emscripten.h>
-
 #endif
 
 #include "sdl2pp.h"
@@ -20,6 +19,7 @@ public:
 
 public:
     Game();
+    ~Game();
 
 public:
     /**
@@ -66,13 +66,19 @@ private:
 
     void takeTurn();
 
+    void startMoveAnimation();
+
+    void computerMove();
+
+    static void computerMoveCallback(char *data, int size, void *arg);
+
     void move(); // move the chessman at playerOrgPos to playerCurPos
 
     bool checkOver();
 
 private:
     enum class PlayerType {
-        Human, AI
+        Human, Computer
     };
 
     enum class PlayerStatus {
@@ -80,10 +86,6 @@ private:
         CanMove, // human player can move chessman
         IsMoving, // human player is moving chessman
         MoveAnimation, // playing chessman move animation
-    };
-
-    struct Coord {
-        int x, y;
     };
 
     // If the coordinate is not in the area of any board grids, return nullopt
@@ -103,6 +105,8 @@ private:
     static const int CHESSMAN_ACTUAL_H = 60;
 
     static const int MOVE_ANIMATION_DURATION = 300; // ms
+
+    static const int AI_TIME_LIMIT = 1000; // ms
 
 #ifndef EMSCRIPTEN
 public:
@@ -137,6 +141,8 @@ private:
 
     bool isMouse;
     SDL_FingerID fingerId;
+
+    worker_handle workerHandle;
 };
 
 

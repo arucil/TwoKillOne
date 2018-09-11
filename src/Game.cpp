@@ -1,6 +1,7 @@
-#include <cmath>
+#include <cstdlib>
 #include <stdexcept>
 #include "events.h"
+#include "AI_worker.h"
 #include "Game.h"
 
 using std::abs;
@@ -19,6 +20,12 @@ Game::Game() :
 #endif
         isDirty(true) {
     initEvents();
+
+    workerHandle = emscripten_create_worker("worker.js");
+}
+
+Game::~Game() {
+    emscripten_destroy_worker(workerHandle);
 }
 
 void Game::initEvents() {
@@ -109,9 +116,7 @@ void Game::initEvents() {
 
                 if (Player::None == board(*pos)) {
                     playerCurPos = *pos;
-                    playerStatus = PlayerStatus::MoveAnimation;
-                    moveAnimationDelta = 0;
-                    moveAnimationTime = emscripten_get_now();
+                    startMoveAnimation();
                 } else {
                     playerStatus = PlayerStatus::CanMove;
                 }
@@ -170,7 +175,7 @@ void Game::handleUserEvents(const SDL_UserEvent &e) {
         case 0:
             black = PlayerType::Human; break;
         case 1:
-            black = PlayerType::AI; break;
+            black = PlayerType::Computer; break;
         default:
             throw std::logic_error("unreachable");
         }
@@ -180,7 +185,7 @@ void Game::handleUserEvents(const SDL_UserEvent &e) {
         case 0:
             white = PlayerType::Human; break;
         case 1:
-            white = PlayerType::AI; break;
+            white = PlayerType::Computer; break;
         default:
             throw std::logic_error("unreachable");
         }
@@ -216,7 +221,7 @@ void Game::takeTurn() {
                 showMessage("电脑（黑棋）思考中...");
             );
 #endif
-            ///TODO: AI
+            computerMove();
         }
     } else {
         if (white == PlayerType::Human) {
@@ -233,9 +238,43 @@ void Game::takeTurn() {
                 showMessage("电脑（白棋）思考中...");
             );
 #endif
-            ///TODO: AI
+            computerMove();
         }
     }
+}
+
+void Game::startMoveAnimation() {
+    playerStatus = PlayerStatus::MoveAnimation;
+    moveAnimationDelta = 0;
+    moveAnimationTime = emscripten_get_now();
+}
+
+void Game::computerMoveCallback(char *data, int size, void *arg) {
+    auto response = reinterpret_cast<ResponseData *>(data);
+    Game *game = reinterpret_cast<Game *>(arg);
+
+    game->playerOrgPos = response->srcPos;
+    game->playerCurPos = response->destPos;
+
+#ifdef EMSCRIPTEN
+    if (Player::Black == game->curPlayer) {
+        EM_ASM(
+                showMessage("黑棋移动...");
+        );
+    } else {
+        EM_ASM(
+                showMessage("白棋移动...");
+        );
+    }
+#endif
+
+    game->startMoveAnimation();
+}
+
+void Game::computerMove() {
+    RequestData request { board, curPlayer, AI_TIME_LIMIT };
+
+    emscripten_call_worker(workerHandle, "runAI", reinterpret_cast<char *>(&request), sizeof request, computerMoveCallback, this);
 }
 
 bool Game::checkOver() {

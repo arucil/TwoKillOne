@@ -62,8 +62,9 @@ public:
 
     bool isWinning(Player) const;
 
-private:
-    static const Delta Directions[4];
+public:
+    static const int NUM_DIRECTIONS = 4;
+    static const Delta Directions[NUM_DIRECTIONS];
 
 private:
     Player array[SIZE][SIZE];
