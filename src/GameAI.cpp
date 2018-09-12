@@ -38,6 +38,7 @@ public:
 
 void GameAI::think(const Board &board, Player player, int milliseconds) {
     auto root = new Node(board, nextPlayer(player), nullptr);
+    root->visits = 1; // Avoid playing simulation on root node
     auto endTime = emscripten_get_now() + milliseconds;
 
     while (emscripten_get_now() < endTime) {
