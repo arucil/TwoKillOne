@@ -57,6 +57,9 @@ void Game::initEvents() {
             } else if (playerStatus == PlayerStatus::IsMoving && playerCurPos.x >= 0) {
                 move();
             }
+        } else if (e.button == SDL_BUTTON_RIGHT && playerStatus == PlayerStatus::IsMoving) {
+            playerStatus = PlayerStatus::CanMove;
+            isDirty = true;
         }
     };
 
@@ -73,14 +76,6 @@ void Game::initEvents() {
 
             playerCurCoord.x = e.x;
             playerCurCoord.y = e.y;
-            isDirty = true;
-        }
-    };
-
-    /// Press ESC to cancel the chessman move
-    eventDispatcher.keyDown = [this](const SDL_KeyboardEvent &e) {
-        if (playerStatus == PlayerStatus::IsMoving && SDLK_ESCAPE == e.keysym.sym) {
-            playerStatus = PlayerStatus::CanMove;
             isDirty = true;
         }
     };
